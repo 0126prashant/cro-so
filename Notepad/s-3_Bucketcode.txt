@@ -1,0 +1,72 @@
+npm install aws-sdk
+
+const AWS = require('aws-sdk');
+
+// Configure AWS with your access key and secret key
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: 'your-aws-region', // Specify your AWS region
+});
+
+const s3 = new AWS.S3();
+const S3_BUCKET_NAME = 'your-s3-bucket-name';
+
+//----------------------------------------------
+async function captureScreenshots(inputUrl, screenshotPath) {
+  // ... existing code ...
+
+  for (let x = 0; x < totalWidth; x += 1920) {
+    for (let y = 0; y < totalHeight; y += 1080) {
+      // ... existing code ...
+
+      const screenshotImageData = await page.screenshot({
+        encoding: 'base64',
+        type: 'jpeg',
+        quality: 90,
+      });
+
+      // Upload image to AWS S3
+      const fileName = `${Date.now()}_${x}_${y}.jpg`;
+      const s3Params = {
+        Bucket: S3_BUCKET_NAME,
+        Key: `${baseFolderName}/${fileName}`, // Specify the S3 path
+        Body: Buffer.from(screenshotImageData, 'base64'),
+        ContentType: 'image/jpeg',
+      };
+
+      await s3.upload(s3Params).promise();
+      const imageUrl = `https://${S3_BUCKET_NAME}.s3.amazonaws.com/${baseFolderName}/${fileName}`;
+
+      screenshotsData[`${x}_${y}`] = { imageData: screenshotImageData, imageUrl };
+
+      // ... existing code ...
+    }
+  }
+
+  // ... existing code ...
+}
+/-------------------------------------------------------
+
+async function getAllImageUrlsFromS3() {
+  const s3Params = {
+    Bucket: S3_BUCKET_NAME,
+    Prefix: baseFolderName, // Specify the prefix if images are stored in a specific folder
+  };
+
+  try {
+    const objects = await s3.listObjectsV2(s3Params).promise();
+    const imageUrls = objects.Contents.map(object => {
+      return `https://${S3_BUCKET_NAME}.s3.amazonaws.com/${object.Key}`;
+    });
+
+    console.log('All Image URLs:', imageUrls);
+    return imageUrls;
+  } catch (error) {
+    console.error('Error retrieving image URLs from S3:', error.message);
+    throw error;
+  }
+}
+
+// Call this function to retrieve all image URLs
+const imageUrls = await getAllImageUrlsFromS3();

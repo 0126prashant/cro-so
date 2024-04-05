@@ -1,0 +1,20 @@
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+def load_model(model_name: str):
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+    return tokenizer, model
+
+def generate_text(prompt: str, tokenizer, model):
+    inputs = tokenizer(prompt, return_tensors="pt")
+    outputs = model.generate(inputs["input_ids"], max_length=50, num_return_sequences=5)
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+# Load the model (replace 'llama-2-7b' with the actual model name or path)
+tokenizer, model = load_model('llama-2-7b')
+
+# Generate text
+prompt = "The quick brown fox"
+generated_text = generate_text(prompt, tokenizer, model)
+print(generated_text)

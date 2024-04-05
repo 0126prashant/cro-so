@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="./styles/page-1.css">
+<link rel="stylesheet" href="./styles/intro.css">
+<link rel="stylesheet" href="./styles/js.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<title>Table of Contents</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+
+
+
+</head>
+<body>
+  <button id="download-btn" onclick="generatePdfWithJSPDF()">Download</button>
+  <div id="hello">
+  <div id="pdf">
+    
+  <div class="container-tbl">
+    <header class="header">
+        <img src="./assets/muducy-logo.png" alt="Application Logo" class="logo">
+        <h1>Screenshot Generator</h1>
+    </header>
+    <section class="intro-section">
+        <h2>Introduction</h2>
+        <p>This application automates the process of generating screenshots from websites and provides AI-based feedback on potential improvements.</p>
+    </section>
+    <section class="feature-section">
+        <h2>Features</h2>
+        <ul>
+            <li>Automatic screenshot generation</li>
+            <li>AI-driven website analysis and feedback</li>
+            <li>User-friendly interface</li>
+        </ul>
+    </section>
+    <section class="form-section">
+        <h2>Generate Screenshots</h2>
+        <form id="screenshotForm">
+            <input type="text" id="websiteUrl" name="websiteUrl" placeholder="Enter website URL">
+            <button type="submit">Generate</button>
+        </form>
+    </section>
+    <section class="screenshot-gallery">
+        <h2>Screenshots</h2>
+        <div class="gallery-grid">
+            <!-- Placeholder for screenshots -->
+        </div>
+    </section>
+    <section class="feedback-section">
+        <h2>AI Feedback</h2>
+        <p>After analyzing the screenshots, our AI suggests the following improvements for your website:</p>
+        <ul class="feedback-list">
+            <!-- Placeholder for AI feedback -->
+        </ul>
+    </section>
+    <footer class="footer">
+        <p>Contact us at <a href="mailto:info@example.com">info@example.com</a> for more info.</p>
+        <div class="footer-mudcy" style="display: flex; justify-content: flex-end; padding: 40px;">
+          <div style="display: flex; align-items: center;">
+            <p style="margin-right: 10px; margin-top: 25px; color: blackf;">Powered By</p>
+            <img src="./assets/muducy-logo.png" alt="error-in-mudcy" style="height: 40px; width: auto;">
+          </div>
+        </div>
+    </footer>
+    </div>
+    <!-- ------------------------------------------intro page------------------------------ -->
+    <!-- <div class="html2pdf__page-break"></div> -->
+    <div class="container">
+      <header>
+        <h1 id="intro">Introduction</h1>
+    </header>
+      
+      <section class="content">
+        <!-- <div class="number">1.</div> -->
+        <h3> 1. Initial Check:</h3>
+        <p>During our evaluation, we confirmed that the website <span id="span-1">Goli.com</span> pertains to the health and wellness industry and specialises in the sale of products such as Apple Cider Vinegar Gummies.</p>
+        <br>
+        <br>
+        <h3> 2. Purpose of the Report: </h3>
+        <p>This document serves as a detailed analysis of the website's current conversion rate performance, with strategic insights aimed at enhancing user experience and increasing conversions.</p>
+        <br>
+        <br>
+        <h3> 3 Scope of Analysis: </h3>
+        <p>The audit focuses on key website elements such as user interface and experience, navigation efficiency, call-to-action buttons, content relevance, loading speed, and mobile responsiveness.</p>
+        <br>
+        <br>
+        <h3> 4. Evaluation Metrics:</h3>
+        <ul>
+        <li>Conversion Rate: The percentage of visitors who take the desired action.</li>
+           <li>Bounce Rate: The rate at which new visitors visit the site and immediately leave.</li> 
+            <li>Average Time on Page: How long visitors are engaging with the page.</li>
+            <li>Click-Through Rate (CTR): The ratio of users who click on a specific link to the number of total users who view a page, email, or advertisement.</li>
+            <li>User Journey Analysis: How users navigate through the site.</li>
+            <li>Mobile Optimization: How the site performs on mobile devices.</li>
+          </ul>
+        <br>
+        <br>
+        <h3> 5 Methodology: </h3>
+        <p> Utilization of advanced analytics tools and heuristic evaluation methods to gather data and interpret user interaction with the website.</p>
+        <br>
+        <br>
+    
+      </section>
+      
+      <div class="above-footer">
+        <h3>Cautionary Note:</h3>
+        <p> Please be advised that this report is generated with the assistance of AI technology. While we strive for accuracy, there is a scope for errors. We are continually refining our algorithms to enhance the precision and reliability of our reports. Should you require a more thorough analysis, we recommend reaching out to our CRO experts at Cro@Muddy.com for further investigation and a detailed report.</p>
+      </div>
+      <div class="footer-mudcy-int">
+        <div style="display: flex; align-items: center;">
+            <p style="margin-right: 10px; margin-top: 25px;">Generated By</p>
+            <img src="./assets/muducy-logo.png" alt="error-in-mudcy" style="height: 40px; width: auto;">
+        </div>
+    </div>
+    
+    
+    </div>
+
+    <!-- <div class="html2pdf__page-break"></div> -->
+    <!-- ------------------------------------------intro page ends------------------------------ -->
+
+<!-- -------------------------------------------First page ---------------------------------->
+<div id="cro-audit-report">
+  <div class="brdr-none"></div>
+  <div class="brdr-none"></div>
+  <div class="brdr-none"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div class="audit-yellow"></div>
+  <div class="brdr-none"></div>
+  <div class="brdr-none"><h1>CRO Audit</h1></div>
+  <div class="brdr-none"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div class="audit-yellow"></div>
+  <div></div>
+  <div class="brdr-none"></div>
+  <div class="brdr-none"><h2>Report</h2></div>
+  <div class="brdr-none"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>   
+  <div></div>
+  <div></div>
+  <div class="audit-yellow"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div class="brdr-none"></div>
+  <div class="brdr-none">
+    <span><h1>web-Name</h1></span>
+    <p>Comprehensive Report <br/>focusing on user<br/>  experience, conversion<br/> elements, and performance<br/> metrics to identify <br/>optimization opportunities.</p></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div class="brdr-none"></div>
+  <div class="brdr-none"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div class="audit-yellow"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div class="audit-yellow"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div class="audit-yellow brdr-none-ylw"><img src="./assets/muducy-logo.png" alt=""> </div>
+  <div class="audit-yellow brdr-none-ylw"></div>
+</div>
+
+
+<div class="html2pdf__page-break"></div>
+<!-- -------------------------------------------First page end ---------------------------------->
+
+  </div>
+
+    <div id="dynamic-part">
+</div>
+</div>
+</div>
+</body>
+<script src="./js/new.js"></script>
+<!-- <script src="./js/structured.js"></script> -->
+<!-- <script src="./js/dynamic.js"></script> -->
+</html>

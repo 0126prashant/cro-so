@@ -1,0 +1,93 @@
+// --------------necxt---------------->>
+// const express = require("express");
+// const routerScreenshot = express.Router();
+// const { screenShotFunc, saveToJSONFile } = require("../screenShotFunc");
+// const path = require("path");
+// const fs = require("fs/promises");
+// const parseUrl = require("url-parse");
+// const { UserModel } = require("../model/users.model");
+// const multer = require('multer');
+// const { Pdf } = require("../model/pdf.model");
+// const app = express();
+// const { spawn } = require('child_process');
+
+// // Python script path
+// const pythonScriptPath = path.join(__dirname, '../main2.py'); // Adjust the path as necessary
+// console.log("pythonScriptPath",pythonScriptPath);
+// // Python executable path (assuming Python is installed in a virtual environment)
+// const pythonExecutable = path.join(__dirname, '../venv/Scripts/active'); // Adjust the path to your Python interpreter
+// console.log("pythonExecutable",pythonExecutable);
+
+// const upload = multer({ storage: multer.memoryStorage() });
+
+// let globalWebsiteName;
+
+// routerScreenshot.post("/", async (req, res) => {
+//   const { url: inputUrl, userEmail } = req.body;
+
+//   if (!inputUrl) {
+//     return res.status(400).json({ error: "URL is required in the request body." });
+//   }
+
+//   const parsedUrl = parseUrl(inputUrl);
+//   let websiteName = parsedUrl.hostname;
+//   globalWebsiteName = websiteName;
+
+//   if (!websiteName) {
+//     return res.status(400).json({ error: "Invalid URL. Unable to extract the website name." });
+//   }
+
+//   try {
+//     const user = new UserModel({ websiteName, userEmail, inputUrl });
+//     await user.save();
+//     const userInDb = await UserModel.findOne({ userEmail, websiteName });
+//     const creatorID = userInDb._id.toString();
+
+//     // Call screenShotFunc first
+//     const screenshotUrls = await screenShotFunc(inputUrl, websiteName, userEmail, creatorID);
+//     console.log("screenshotUrls", screenshotUrls);
+
+//     // Send response to the client with screenshot URLs
+//     res.status(200).json({ success: true, screenshots: screenshotUrls, creatorID: creatorID });
+
+//     // Call the Python script after sending the response
+//     console.log("Calling Python script...");
+//     const { stdout, stderr } = await runPythonScript(pythonScriptPath, []);
+//     console.log('Python script stdout:', stdout);
+//     console.error('Python script stderr:', stderr); 
+
+//   } catch (error) {
+//     console.error(`An error occurred: ${error.message}`);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
+// // Function to run Python script
+// function runPythonScript(scriptPath, args) {
+//   return new Promise((resolve, reject) => {
+//     const pythonProcess = spawn(pythonExecutable, [scriptPath, ...args]);
+
+//     let stdout = '';
+//     let stderr = '';
+
+//     pythonProcess.stdout.on('data', (data) => {
+//       stdout += data.toString();
+//     });
+
+//     pythonProcess.stderr.on('data', (data) => {
+//       stderr += data.toString();
+//     });
+
+//     pythonProcess.on('close', (code) => {
+//       if (code === 0) {
+//         resolve({ stdout, stderr });
+//       } else {
+//         reject(new Error(`Python script exited with code ${code}. stderr: ${stderr}`));
+//       }
+//     });
+
+//     pythonProcess.on('error', (err) => {
+//       reject(err);
+//     });
+//   });
+// }

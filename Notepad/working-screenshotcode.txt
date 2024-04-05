@@ -1,0 +1,215 @@
+const puppeteer = require('puppeteer');
+const axios = require('axios');
+const fs = require('fs/promises');
+const path = require('path');
+const dotenv = require('dotenv');
+const OpenAI = require("openai");
+
+dotenv.config();
+const openAPIKEY = "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"
+const openai = new OpenAI({ apiKey: openAPIKEY });
+
+async function captureScreenshots(inputUrl, screenshotPath) {
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+
+    let screenshotsData;
+
+    try {
+        await page.goto(inputUrl, { waitUntil: 'networkidle0' });
+        await page.waitForTimeout(5000);
+
+        const { width: totalWidth, height: totalHeight } = await page.evaluate(() => ({
+            width: document.body.scrollWidth,
+            height: document.body.scrollHeight,
+        }));
+
+        screenshotsData = {};
+
+        for (let x = 0; x < totalWidth; x += 1920) {
+            for (let y = 0; y < totalHeight; y += 1080) {
+                await page.setViewport({ width: 1920, height: 1080 });
+                await page.evaluate((x, y) => window.scrollTo(x, y), x, y);
+                await page.waitForTimeout(2000); 
+
+                const screenshotImageData = await page.screenshot({ encoding: 'base64' });
+                screenshotsData[`${x}_${y}`] = screenshotImageData;
+
+                const nestedFolder = path.join(screenshotPath, inputUrl.replace(/[^a-zA-Z0-9]/g, '_'));
+                await fs.mkdir(nestedFolder, { recursive: true });
+                await fs.writeFile(path.join(nestedFolder, `${Date.now()}_${x}_${y}.png`), Buffer.from(screenshotImageData, 'base64'));
+            }
+        }
+    } catch (error) {
+        console.error(`An error occurred while capturing screenshots: ${error.message}`);
+    } finally {
+        if (browser) {
+            await browser.close();
+        }
+    }
+
+    return screenshotsData;
+}
+
+
+async function getGPTFeedback(screenshotImageData) {
+    const prompt = `
+        1. Identify the content of the image: Describe what is depicted in the image and provide any relevant details.
+        
+        2. Assess the visual elements: Evaluate the visual elements such as colors, shapes, and patterns in the image. Comment on their effectiveness and suggest improvements if needed.
+        
+        3. Analyze the composition: Examine how different elements are arranged in the image. Provide feedback on the composition and propose adjustments for better visual impact.
+        
+        4. Evaluate the overall visual appeal: Assess the overall visual appeal of the image. Comment on the aesthetics and suggest enhancements to make it more engaging.
+        
+        5. Additional feedback and recommendations: Based on your analysis as a visual expert, offer any additional insights or recommendations for optimizing the image. Highlight areas that may benefit from further attention and improvement.
+    `;
+    const response = await openai.chat.completions.create({
+        model: 'gpt-4-vision-preview',
+        messages: [
+            {
+                role: 'user',
+                content: [
+                    {
+                        type: "text",
+                        text: prompt
+                    },
+                    {
+                        type: "image",
+                        image: screenshotImageData
+                    }
+                ]
+            },
+        ],
+        max_tokens: 300,
+    });
+
+    return response.choices[0].message.content;
+}
+// async function getGPTFeedback(screenshotImageData) {
+//     try {
+//         const prompt = `
+//             1. Identify the content of the image: Describe what is depicted in the image and provide any relevant details.
+
+//             2. Assess the visual elements: Evaluate the visual elements such as colors, shapes, and patterns in the image. Comment on their effectiveness and suggest improvements if needed.
+
+//             3. Analyze the composition: Examine how different elements are arranged in the image. Provide feedback on the composition and propose adjustments for better visual impact.
+
+//             4. Evaluate the overall visual appeal: Assess the overall visual appeal of the image. Comment on the aesthetics and suggest enhancements to make it more engaging.
+
+//             5. Additional feedback and recommendations: Based on your analysis as a visual expert, offer any additional insights or recommendations for optimizing the image. Highlight areas that may benefit from further attention and improvement.
+//         `;
+
+//         const response = await openai.chat.completions.create({
+//             model: 'gpt-4-vision-preview',
+//             messages: [
+//                 {
+//                     role: 'user',
+//                     content: [
+//                         {
+//                             type: 'text',
+//                             text: prompt,
+//                         },
+//                         {
+//                             type: 'image_url',
+//                             image_url: screenshotImageData,
+//                         },
+//                     ],
+//                 },
+//             ],
+//             max_tokens: 300,
+//         });
+
+//         return response.choices[0].message.content;
+//     } catch (error) {
+//         console.error(`Error getting GPT feedback: ${error.message}`);
+//         return 'Error getting feedback';
+//     }
+// }
+
+
+async function writeFeedbackToFile(feedback, filePath) {
+    try {
+        await fs.appendFile(filePath, `${feedback}\n`);
+        console.log(`Feedback written to ${filePath}`);
+    } catch (error) {
+        console.error(`Error writing feedback to file: ${error.message}`);
+    }
+}
+
+async function screenShotFunc(inputUrl, res) {
+    const screenshotsParentPath = 'screenshots';
+
+    try {
+        await fs.mkdir(screenshotsParentPath, { recursive: true });
+        const baseFolderName = inputUrl.replace(/[^a-zA-Z0-9]/g, '_');
+        let folderName = baseFolderName;
+
+        let folderCount = 1;
+        while (await fs.access(path.join(screenshotsParentPath, folderName)).then(() => true).catch(() => false)) {
+            folderCount++;
+            folderName = `${baseFolderName}${folderCount}`;
+        }
+
+        const screenshotsData = await captureScreenshots(inputUrl, path.join(screenshotsParentPath, folderName));
+
+        for (const key in screenshotsData) {
+            const feedback = await getGPTFeedback(screenshotsData[key]);  
+            const nestedFolder = path.join(screenshotsParentPath, folderName);
+            await fs.mkdir(nestedFolder, { recursive: true });
+            await writeFeedbackToFile(feedback, path.join(nestedFolder, `feedback_${Date.now()}_${key}.txt`));
+        }
+
+        res.status(200).json({ message: "Screenshots taken successfully!", screenshots: screenshotsData });
+    } catch (error) {
+        console.error(`An error occurred: ${error.message}`);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+module.exports = { screenShotFunc };
+
+
+
+---------------------code for inly taken screenshots------------------->>>>
+
+const puppeteer = require('puppeteer');
+
+async function screenShotFunc(inputUrl, res) {
+    let browserInstance = await puppeteer.launch({ headless: "new" });
+    let pageInstance = await browserInstance.newPage();
+    let screenshotsData = {};
+    let chunkSizeConfig = { width: 1920, height: 1080 };
+
+    try {
+        await pageInstance.goto(inputUrl, { waitUntil: "networkidle0" });
+
+        // Add additional wait time to ensure all dynamic content is loaded.
+        await pageInstance.waitForTimeout(5000); // Adjust the timeout as needed.
+
+        const { width: totalWidth, height: totalHeight } = await pageInstance.evaluate(() => ({
+            width: document.body.scrollWidth,
+            height: document.body.scrollHeight,
+        }));
+
+        for (let x = 0; x < totalWidth; x += chunkSizeConfig.width) {
+            for (let y = 0; y < totalHeight; y += chunkSizeConfig.height) {
+                await pageInstance.setViewport({ width: chunkSizeConfig.width, height: chunkSizeConfig.height });
+                await pageInstance.evaluate((x, y) => window.scrollTo(x, y), x, y);
+
+                // Add a short delay before taking the screenshot to allow content to load.
+                await pageInstance.waitForTimeout(2000); // Adjust the timeout as needed.
+
+                const screenshotImageData = await pageInstance.screenshot({ encoding: 'base64' });
+                screenshotsData[`${x}_${y}`] = screenshotImageData;
+            }
+        }
+        res.status(200).json({ message: "Screenshots taken successfully!", screenshots: screenshotsData });
+    } catch (error) {
+        console.error(`An error occurred: ${error.message}`);
+        res.status(400).json({ error: error.message });
+    } finally {
+        await browserInstance.close();
+    }
+}
+module.exports = { screenShotFunc };

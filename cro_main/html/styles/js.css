@@ -1,0 +1,58 @@
+.mobileParentDiv{
+    background-color: #e8fc00;
+    border: 2px solid;
+}
+.desktopParentDiv{
+    /* border: 4px solid red;  */
+}
+
+.mobileFeedback{
+ padding: 60px;
+ background-color: #e8fc00;
+}
+
+.desktopFeedback{
+
+    background-color: #e8fc00;
+}
+/* .desktopFeedback,
+  .mobileFeedback {
+    margin-bottom: 20px;
+  } */
+
+  .feedbackItem {
+    margin-bottom: 15px;
+    
+  }
+
+  .feedbackNumber {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #000;
+    text-align: center;
+    line-height: 26px;
+    margin-right: 10px;
+    vertical-align: top;
+  }
+
+  .feedbackContent {
+    display: inline-block;
+    width: calc(100% - 50px);
+  }
+
+  .feedbackHeading {
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 5px;
+  }
+
+  .feedbackAdvice {
+    margin-left: 40px;
+  }
+
+  .superCROTip {
+    margin-top: 20px;
+    font-style: italic;
+  }
