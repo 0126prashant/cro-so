@@ -6,7 +6,15 @@ const path = require("path");
 const { connection } = require('./db');
 const { routerScreenshot } = require('./routes/screenshot.routes');
 const app = express();
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+  origin:`${process.env.frontendURL}/`,
+  methods:"GET,POST,PUT,DELETE",
+  credentials:true
+}));
+app.use(express.json());
+
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 
 const { MongoClient } = require("mongodb");
 
@@ -46,6 +54,20 @@ app.get("/pdffeedback/:creatorID", async (req, res) => {
 
 app.use("/screenshots", routerScreenshot);
 app.use("/", routerScreenshot);
+
+
+app.get("*",(req,res)=>{
+  res.sendFile(
+      path.join(__dirname,"../frontend/build/index.html"),
+      function(err){
+
+          if(err){
+              res.status(500).send(err)
+          }
+      }
+  )
+
+})
 
 const PORT = 8080;
 app.listen(PORT,async()=>{
