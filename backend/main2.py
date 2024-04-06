@@ -17,12 +17,13 @@ from pymongo import MongoClient
 import sys
 import webbrowser 
 
+load_dotenv()
 # Replace 'your_mongodb_uri' with your MongoDB connection string
-client = os.getenv('MongoUrl')
+mongodb_uri = os.getenv('MongoUrl')
+client = MongoClient(mongodb_uri)
 db = client['crow_so']  # Access the 'cro.so' database
 
 # this is setup of lc_key 
-load_dotenv()
 lc_key = os.getenv('lc_key')
 key = os.getenv('oai_key')
 
