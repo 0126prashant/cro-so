@@ -18,7 +18,7 @@ import sys
 import webbrowser 
 
 # Replace 'your_mongodb_uri' with your MongoDB connection string
-client = MongoClient('mongodb+srv://Prashant:som@cluster0.e4bu1fg.mongodb.net/crow_so?retryWrites=true&w=majority')
+client = os.getenv('MongoUrl')
 db = client['crow_so']  # Access the 'cro.so' database
 
 # this is setup of lc_key 

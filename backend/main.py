@@ -33,7 +33,7 @@ key = os.getenv('oai_key')
 
 
 ## LOAD UNSTRUCTURED MARKDOWN LOADER AND THEN SPLIT THE DOCUMENTS ACCORDINGLY :
-client = MongoClient('mongodb+srv://Prashant:som@cluster0.e4bu1fg.mongodb.net/crow_so?retryWrites=true&w=majority')
+client = os.getenv('MongoUrl')
 db = client["crow_so"]
 website_info_collection = db["WebsiteInfo"]
 
