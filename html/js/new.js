@@ -1,11 +1,9 @@
-// Function to generate footer content-----------
-// const creatorID = localStorage.getItem('creatorID');
+
 const urlParams = new URLSearchParams(window.location.search);
 console.log("urlParams",urlParams);
 const creatorID = urlParams.get('creatorID');
-// const creatorID = "660a5780d73bb75bcd671485";
 console.log("Creator ID in new tab:", creatorID);
-const apiUrl = "http://localhost:8080";
+const apiUrl = "http://localhost:8081";
 fetch(`${apiUrl}/pdffeedback/${creatorID}`)
 0
   .then((response) => {
