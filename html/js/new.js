@@ -3,8 +3,8 @@ const urlParams = new URLSearchParams(window.location.search);
 console.log("urlParams",urlParams);
 const creatorID = urlParams.get('creatorID');
 console.log("Creator ID in new tab:", creatorID);
-const apiUrl = "http://localhost:8081";
-fetch(`${apiUrl}/pdffeedback/${creatorID}`)
+// const apiUrl = "http://localhost:8081";
+fetch(`/pdffeedback/${creatorID}`)
 0
   .then((response) => {
     if (response.ok) {
