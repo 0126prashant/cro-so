@@ -242,7 +242,7 @@ const simulateLoading = () => {
     try {
       setLoading(true);
       simulateLoading();
-      const response = await fetch(`http://localhost:8081/screenshots`, {
+      const response = await fetch(`/screenshots`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
