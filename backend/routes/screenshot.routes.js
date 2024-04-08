@@ -58,7 +58,8 @@ routerScreenshot.post("/", async (req, res) => {
         console.log("Python script stdout:", stdout);
         if (stderr) {
           console.error("Python script stderr:", stderr);
-          const htmlFilePath = path.join(__dirname, '../../html/page1.html');
+          // const htmlFilePath = path.join(__dirname, '../../html/page1.html');
+          const htmlFilePath = "/home/ubuntu/cro-so/html/page1.html"
           console.log("<<<<<--------------->>>>>");
           setTimeout(() => {
             sendEmail(creatorID)
