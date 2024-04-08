@@ -1,4 +1,4 @@
-
+console.log("pdf-filecalled")
 const urlParams = new URLSearchParams(window.location.search);
 console.log("urlParams",urlParams);
 const creatorID = urlParams.get('creatorID');
