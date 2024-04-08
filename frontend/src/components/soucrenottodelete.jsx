@@ -140,7 +140,7 @@ const App = () => {
     }
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8080/screenshots`, {
+      const response = await fetch(`http://localhost:8081/screenshots`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -153,7 +153,7 @@ const App = () => {
         setScreenshotsData(data.screenshots);
 
         const feedbackPromises = Object.keys(data.screenshots).map(async (key) => {
-          const feedbackResponse = await fetch(`http://localhost:8080/screenshots/feedback/${key}`, {
+          const feedbackResponse = await fetch(`http://localhost:8081/screenshots/feedback/${key}`, {
             method: "GET",
           });
 
