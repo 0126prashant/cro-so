@@ -163,6 +163,6 @@ for feedback in desktop_results:
 
 print("Feedback data saved to the 'pdffeedback' collection in the 'cro_so' database")
 print(f"crtrid pyhtomn: {creator_id}")
-# html_file_path = f"http://127.0.0.1:5500/html/page1.html?creatorID={creator_id}"
-http://13.201.53.58/:5500/html/page1.html?creatorID={creator_id}
+html_file_path = f"http://13.201.53.58/:5500/html/page1.html?creatorID={creator_id}"
+# html_file_path = http://13.201.53.58/:5500/html/page1.html?creatorID={creator_id}
 webbrowser.open_new_tab(html_file_path)
