@@ -10,8 +10,10 @@ const { LocalStorage } = require("node-localstorage");
 const { sendEmail } = require("../functions/mailSender");
 const { Pdf } = require("../model/pdf.model");
 
-const pythonExecutable = path.join(__dirname, "../venv/Scripts/python.exe");
-const pythonScriptPath = path.join(__dirname, "../main2.py");
+// const pythonExecutable = path.join(__dirname, "../venv/Scripts/python.exe");
+// const pythonScriptPath = path.join(__dirname, "../main2.py");
+const pythonExecutable = 'python3';
+const pythonScriptPath = '/home/ubuntu/cro-so/backend/main2.py';
 console.log("Python script path:", pythonScriptPath);
 
 const upload = multer({ storage: multer.memoryStorage() });
