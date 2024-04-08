@@ -21,30 +21,6 @@ fetch(`/pdffeedback/${creatorID}`)
     console.error("Error fetching data:", error);
   });
 
-// function imageUrlToBase64(url, callback) {
-//   fetch(url, {
-//     method: "GET",
-//     mode: "cors",
-//   })
-//     .then((response) => {
-//       if (!response.ok) {
-//         throw new Error("Network response was not ok");
-//       }
-//       return response.blob();
-//     })
-//     .then((blob) => {
-//       const reader = new FileReader();
-//       reader.readAsDataURL(blob);
-//       reader.onloadend = () => {
-//         const base64data = reader.result;
-//         callback(base64data);
-//       };
-//     })
-//     .catch((error) => {
-//       console.error("Error fetching or encoding image:", error);
-//       callback(null);
-//     });
-// }
 
 function imageUrlToBase64(url, callback) {
   fetch(url, {
