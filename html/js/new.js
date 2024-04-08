@@ -15,7 +15,7 @@ fetch(`/pdffeedback/${creatorID}`)
   })
   .then((data) => {
     // console.log(data);
-    // Display(data);
+     Display(data);
   })
   .catch((error) => {
     console.error("Error fetching data:", error);
