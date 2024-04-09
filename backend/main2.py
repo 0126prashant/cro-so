@@ -90,7 +90,7 @@ else:
     for url in desktop_urls:
         print(url)
 
-    model = ChatOpenAI(api_key=key, model="gpt-4-vision-preview", temperature=0.2, max_tokens=4096)
+    model = ChatOpenAI(api_key=key, model="gpt-4-vision-preview", temperature=2, max_tokens=4096)
     prompt = ChatPromptTemplate.from_template(sysprompt)
     parser = StrOutputParser()
 
@@ -111,7 +111,7 @@ def process_image(image_url, creator_id):
     page_section = content.get('Page_Section', [])
 
     flattened_text = " ".join([section.replace('|', '').replace('\n', ' ') for section in page_section])
-    model2 = ChatOpenAI(api_key=key, model="gpt-4-vision-preview", temperature=0.4, max_tokens=4096)
+    model2 = ChatOpenAI(api_key=key, model="gpt-4-vision-preview", temperature=4, max_tokens=4096)
     prompt2 = ChatPromptTemplate.from_template(summprompt)
     parser = StrOutputParser()
 
