@@ -166,9 +166,12 @@ print(f"crtrid pyhtomn: {creator_id}")
 # html_file_path = f"/cro-so/html/page1.html?creatorID={creator_id}"
 import webbrowser
 
-html_file_path = os.path.join("..", "html", "page1.html")
-url = f"file://{os.path.abspath(html_file_path)}?creatorID={creator_id}"
+import webbrowser
+import urllib.parse
+
+html_file_path = os.path.abspath(os.path.join("..", "html", "page1.html"))
+query_param = f"creatorID={creator_id}"
+url = f"file://{html_file_path}?{urllib.parse.quote_plus(query_param)}"
 webbrowser.open_new_tab(url)
-print("donepyton")
 print("donepyton")
 
