@@ -164,6 +164,7 @@ for feedback in desktop_results:
 print("Feedback data saved to the 'pdffeedback' collection in the 'cro_so' database")
 print(f"crtrid pyhtomn: {creator_id}")
 # html_file_path = f"/cro-so/html/page1.html?creatorID={creator_id}"
-html_file_path = /html/page1.html?creatorID={creator_id}
-webbrowser.open(html_file_path)
+html_file_path = os.path.join("..", "html", "page1.html?creatorID=" + creator_id)
+os.system("open " + html_file_path)
 print("donepyton")
+
