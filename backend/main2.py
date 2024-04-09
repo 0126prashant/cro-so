@@ -165,4 +165,5 @@ print("Feedback data saved to the 'pdffeedback' collection in the 'cro_so' datab
 print(f"crtrid pyhtomn: {creator_id}")
 html_file_path = f"http://13.233.99.48:8081/html/page1.html?creatorID={creator_id}"
 # html_file_path = http://13.201.53.58/:5500/html/page1.html?creatorID={creator_id}
-webbrowser.open_new_tab(html_file_path)
+webbrowser.open(html_file_path)
+print("donepyton")
