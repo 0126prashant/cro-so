@@ -165,8 +165,10 @@ for feedback in desktop_results:
 
 print("Feedback data saved to the 'pdffeedback' collection in the 'cro_so' database")
 print(f"crtrid pyhtomn: {creator_id}")
-
+'''
 html_file_path = f"https://6630d791e579b2d4dc5e9565--scintillating-pithivier-acef6d.netlify.app/?creatorID={creator_id}"
 webbrowser.open_new_tab(html_file_path)
-
+'''
+file = "https://6630db5fce04abd9c63959cb--cool-churros-d6977d.netlify.app/"
+webbrowser.open(file)
 
