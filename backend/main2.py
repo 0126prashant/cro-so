@@ -165,7 +165,13 @@ for feedback in desktop_results:
 
 print("Feedback data saved to the 'pdffeedback' collection in the 'cro_so' database")
 print(f"crtrid pyhtomn: {creator_id}")
+'''
 html_file_path = f"http://65.2.63.69:8081/html/page1.html?creatorID={creator_id}"
 webbrowser.open_new_tab(html_file_path)
+'''
+html_file_path = f"http://65.2.63.69:8081/html/page1.html?creatorID={creator_id}"
 
-
+# Try opening in a different browser (e.g., Chrome)
+chrome_path = "C:/Program Files/Google/Chrome/Application/chrome.exe"
+webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
+webbrowser.get('chrome').open_new_tab(html_file_path)
