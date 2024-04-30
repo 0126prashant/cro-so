@@ -160,10 +160,12 @@ for feedback in mobile_results:
 for feedback in desktop_results:
     feedback['device'] = 'desktop'
     pdffeedback_collection.insert_one(feedback)
+    
+    webbrowser.open_new_tab("https://www.google.com/")
 
 print("Feedback data saved to the 'pdffeedback' collection in the 'cro_so' database")
 print(f"crtrid pyhtomn: {creator_id}")
-html_file_path = f"http://127.0.0.1:5500/html/page1.html?creatorID={creator_id}"
+html_file_path = f"http://65.2.63.69:8081/html/page1.html?creatorID={creator_id}"
 webbrowser.open_new_tab(html_file_path)
 
 
