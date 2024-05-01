@@ -15,6 +15,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnablePassthrough
 from pymongo import MongoClient
 import sys
+import webbrowser
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -23,7 +24,6 @@ options = Options()
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
-
 
 load_dotenv()
 # Replace 'your_mongodb_uri' with your MongoDB connection string
@@ -172,14 +172,14 @@ for feedback in desktop_results:
 print("Feedback data saved to the 'pdffeedback' collection in the 'cro_so' database")
 print(f"crtrid pyhtomn: {creator_id}")
 
-# html_file_path = f"https://6630d791e579b2d4dc5e9565--scintillating-pithivier-acef6d.netlify.app/?creatorID={creator_id}"
-# webbrowser.open_new_tab(html_file_path)
+html_file_path = "/home/ubuntu/cro-so/html/page1.html/?creatorID={creator_id}"
+webbrowser.open_new_tab(html_file_path)
 # file = "https://6630db5fce04abd9c63959cb--cool-churros-d6977d.netlify.app/"
 # webbrowser.open(file)
-service = Service('/usr/bin/chromedriver')
-driver = webdriver.Chrome(service=service, options=options)
+# service = Service('/usr/bin/chromedriver')
+# driver = webdriver.Chrome(service=service, options=options)
 
-html_file_path = f"https://6630d791e579b2d4dc5e9565--scintillating-pithivier-acef6d.netlify.app/?creatorID={creator_id}"
-driver.get(html_file_path)
-driver.quit()
+# html_file_path = f"https://6630d791e579b2d4dc5e9565--scintillating-pithivier-acef6d.netlify.app/?creatorID={creator_id}"
+# driver.get(html_file_path)
+# driver.quit()
 
