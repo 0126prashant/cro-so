@@ -17,6 +17,7 @@ from pymongo import MongoClient
 import sys
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 options = Options()
 options.add_argument('--headless')
@@ -175,7 +176,8 @@ print(f"crtrid pyhtomn: {creator_id}")
 # webbrowser.open_new_tab(html_file_path)
 # file = "https://6630db5fce04abd9c63959cb--cool-churros-d6977d.netlify.app/"
 # webbrowser.open(file)
-driver = webdriver.Chrome(executable_path='/usr/bin/chromedriver', options=options)
+service = Service('/usr/bin/chromedriver')
+driver = webdriver.Chrome(service=service, options=options)
 
 html_file_path = f"https://6630d791e579b2d4dc5e9565--scintillating-pithivier-acef6d.netlify.app/?creatorID={creator_id}"
 driver.get(html_file_path)
