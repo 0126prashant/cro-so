@@ -179,4 +179,5 @@ driver = webdriver.Chrome(executable_path='/usr/bin/chromedriver', options=optio
 
 html_file_path = f"https://6630d791e579b2d4dc5e9565--scintillating-pithivier-acef6d.netlify.app/?creatorID={creator_id}"
 driver.get(html_file_path)
+driver.quit()
 
