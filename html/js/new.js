@@ -4,8 +4,7 @@ console.log("urlParams",urlParams);
 const creatorID = urlParams.get('creatorID');
 
 console.log("Creator ID in new tab:", creatorID);
-const apiUrl = "http://localhost:8081";
-fetch(`${apiUrl}/pdffeedback/${creatorID}`)
+fetch(`/pdffeedback/${creatorID}`)
   .then((response) => {
     if (response.ok) {
       return response.json();
@@ -70,7 +69,7 @@ function generatePdfWithJSPDF() {
       formData.append("creatorID", creatorID);
       formData.append("pdf", pdfBlob, "pdf_file.pdf");
 
-      fetch("http://localhost:8081/upload-pdf", {
+      fetch("/upload-pdf", {
         method: "POST",
         body: formData,
       })
