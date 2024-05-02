@@ -242,7 +242,7 @@ const simulateLoading = () => {
     try {
       setLoading(true);
       simulateLoading();
-      const response = await fetch(`http://localhost:8081/screenshots`, {
+      const response = await fetch(`/screenshots`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -256,7 +256,7 @@ const simulateLoading = () => {
       const data = await response.json();
       console.log("data in frontend",data);
       if (data.redirectUrl) {
-        window.open(`http://127.0.0.1:5500/html/page1.html/page1.html?creatorID=${data.creatorID}`, '_blank');
+        window.open(`/home/ubuntu/cro-so/html/page1.html/page1.html?creatorID=${data.creatorID}`, '_blank');
         console.log("Redirecting and passing creator ID.");
       }
       
