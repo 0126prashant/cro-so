@@ -17,15 +17,16 @@ from pymongo import MongoClient
 import sys
 import webbrowser 
 
-load_dotenv()
+load_dotenv()   
 # Replace 'your_mongodb_uri' with your MongoDB connection string
 mongodb_uri = os.getenv('MongoUrl')
 client = MongoClient(mongodb_uri)
 db = client['crow_so']  # Access the 'cro.so' database
-
+ 
+ 
 # this is setup of lc_key 
 lc_key = os.getenv('lc_key')
-key = os.getenv('oai_key')
+key = os.getenv('oai_key') 
 
 # Setup LANGSMITH for LLMOps :
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
@@ -131,7 +132,7 @@ def process_image(image_url, creator_id):
         return None
 
 pdffeedback_collection = db["pdffeedback"]
-
+ 
 mobile_results = []
 for url in mobile_urls:
     try:
@@ -162,6 +163,7 @@ for feedback in desktop_results:
     pdffeedback_collection.insert_one(feedback)
 
 print("Feedback data saved to the 'pdffeedback' collection in the 'cro_so' database")
-print(f"crtrid pyhtomn: {creator_id}")
-html_file_path = f"http://127.0.0.1:5500/html/page1.html?creatorID={creator_id}"
-webbrowser.open_new_tab(html_file_path)
+# print(f"crtrid pyhtomn: {creator_id}")
+# html_file_path = f"http://127.0.0.1:5500/html/page1.html?creatorID={creator_id}"
+# "/html/page1.html"
+# webbrowser.open_new_tab(html_file_path)

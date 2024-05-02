@@ -8,7 +8,6 @@ const { routerScreenshot } = require('./routes/screenshot.routes');
 const app = express();
 // app.use(cors());
 app.use(cors({
-  origin:`${process.env.frontendURL}/`,
   methods:"GET,POST,PUT,DELETE",
   credentials:true
 }));

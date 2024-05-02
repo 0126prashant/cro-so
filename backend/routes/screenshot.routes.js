@@ -20,18 +20,69 @@ let globalWebsiteName;
 let globalUserEmail;
 
 
+// routerScreenshot.post("/", async (req, res) => {
+//   const { url: inputUrl, userEmail } = req.body;
+
+//   if (!inputUrl) {
+//     return res.status(400).json({ error: "URL is required in the request body." });
+//   }
+
+//   const parsedUrl = parseUrl(inputUrl);
+//   const websiteName = parsedUrl.hostname;
+//   globalWebsiteName = websiteName;
+//   globalUserEmail = userEmail;
+
+//   if (!websiteName) {
+//     return res.status(400).json({ error: "Invalid URL. Unable to extract the website name." });
+//   }
+
+//   try {
+//     const user = new UserModel({ websiteName, userEmail, inputUrl });
+//     await user.save();
+//     const userInDb = await UserModel.findOne({ userEmail, websiteName });
+//     const creatorID = userInDb._id.toString();
+//     globalCreatorID = creatorID
+
+//     console.log("Before screenShotFunc");
+//     const screenshotUrls = await screenShotFunc(inputUrl, websiteName, userEmail, creatorID);
+//     console.log("After screenShotFunc");
+
+//     console.log("Calling Python script...");
+//       runPythonScript(pythonScriptPath, creatorID) 
+//       .then(({ stdout, stderr }) => {
+//         console.log("Python script stdout:", stdout);
+//         console.log("Calling html file--------------->>>>>")
+//         if (stderr) {
+//         res.status(200).json({
+//           success: true,
+//           screenshots: screenshotUrls,
+//           creatorID: creatorID,
+//           redirectUrl: Boolean(stderr)  
+//         });
+//           console.log("html file called sucessfully--------------->>>>>")
+//           setTimeout(() => {
+//             sendEmail(creatorID)
+//           }, 10000);
+//         }
+//        })
+//        .catch((error) => {
+//          console.error(`An error occurred when running the Python script: ${error.message}`);
+//        });
+      
+//   } catch (error) {
+//     console.error(`An error occurred: ${error.message}`);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
 routerScreenshot.post("/", async (req, res) => {
   const { url: inputUrl, userEmail } = req.body;
-
   if (!inputUrl) {
     return res.status(400).json({ error: "URL is required in the request body." });
   }
 
   const parsedUrl = parseUrl(inputUrl);
   const websiteName = parsedUrl.hostname;
-  globalWebsiteName = websiteName;
-  globalUserEmail = userEmail;
-
   if (!websiteName) {
     return res.status(400).json({ error: "Invalid URL. Unable to extract the website name." });
   }
@@ -41,39 +92,28 @@ routerScreenshot.post("/", async (req, res) => {
     await user.save();
     const userInDb = await UserModel.findOne({ userEmail, websiteName });
     const creatorID = userInDb._id.toString();
-    globalCreatorID = creatorID
 
-    console.log("Before screenShotFunc");
     const screenshotUrls = await screenShotFunc(inputUrl, websiteName, userEmail, creatorID);
-    console.log("After screenShotFunc");
-    res.status(200).json({ success: true, screenshots: screenshotUrls, creatorID: creatorID });
+    const { stdout, stderr } = await runPythonScript(pythonScriptPath, creatorID);
+    console.log("Python script stdout:", stdout);
 
-    console.log("Calling Python script...");
+    res.status(200).json({
+      success: true,
+      screenshots: screenshotUrls,
+      creatorID: creatorID,
+      redirectUrl: Boolean(stderr)
+    });
 
-      console.log("hurray--------------->>>>>");
-      runPythonScript(pythonScriptPath, creatorID) 
-      .then(({ stdout, stderr }) => {
-        console.log("Python script stdout:", stdout);
-        if (stderr) {
-          console.error("Python script stderr:", stderr);
-          const htmlFilePath = path.join(__dirname, '../../html/page1.html');
-          console.log("<<<<<--------------->>>>>");
-          setTimeout(() => {
-            sendEmail(creatorID)
-          }, 5000);
-          console.log("two--------------->>>>>");
-        }
-       })
-       .catch((error) => {
-         console.error(`An error occurred when running the Python script: ${error.message}`);
-       });
-      
+    console.log("Sending email after delay...");
+    setTimeout(() => {
+      sendEmail(creatorID);
+    }, 10000);
+
   } catch (error) {
     console.error(`An error occurred: ${error.message}`);
     res.status(500).json({ error: error.message });
   }
 });
-
 
 function runPythonScript(scriptPath, creatorID) {
   console.log("Calling Python script with creatorID:",creatorID);

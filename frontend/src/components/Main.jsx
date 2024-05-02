@@ -223,7 +223,7 @@ const simulateLoading = () => {
       clearInterval(loadingInterval);
       setStatusMessage('Completed!');
     }
-  }, 5000); // Update progress every 500ms.
+  }, 5000); 
 };
 
 
@@ -254,11 +254,17 @@ const simulateLoading = () => {
       }
     
       const data = await response.json();
+      console.log("data in frontend",data);
+      if (data.redirectUrl) {
+        window.open(`http://127.0.0.1:5500/html/page1.html/page1.html?creatorID=${data.creatorID}`, '_blank');
+        console.log("Redirecting and passing creator ID.");
+      }
+      
+      // http://127.0.0.1:5500/html/page1.html?creatorID=${data.creatorID}
       console.log("data-in frontend",data)
       console.log("data.creatorID-in frontend",data.creatorID)
       localStorage.setItem("creatorID",data.creatorID)
       setScreenshotsData(data.screenshots)
-      // console.log("dttttaaa",response.json())
         
     } catch (error) {
       console.error("Error in frontend:", error.message);
@@ -268,7 +274,8 @@ const simulateLoading = () => {
     }
   };
 
-  const handleModalDone = () => {
+  
+  const handleModalDone = () => { 
     setShowModal(false);
     // Resume other functionality or perform additional actions with userEmail
   };
