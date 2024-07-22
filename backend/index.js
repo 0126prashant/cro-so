@@ -1,19 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser'); 
-require('dotenv').config();
+const dotenv = require('dotenv');
 const path = require("path");
 const { connection } = require('./db');
 const { routerScreenshot } = require('./routes/screenshot.routes');
 const app = express();
-// app.use(cors());
-app.use(cors({
-  methods:"GET,POST,PUT,DELETE",
-  credentials:true
-}));
+app.use(cors());
+dotenv.config();
+
+
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+// app.use(express.static(path.join(__dirname, "../frontend/build")));
 
 const { MongoClient } = require("mongodb");
 
@@ -25,6 +24,7 @@ app.use(bodyParser.json());
 const url = process.env.MongoUrl;
 const dbName = 'crow_so';
 
+
 app.get("/pdffeedback/:creatorID", async (req, res) => {
   const creatorID = req.params.creatorID;
 
@@ -35,9 +35,9 @@ app.get("/pdffeedback/:creatorID", async (req, res) => {
     const db = client.db(dbName);
     const collection = db.collection('pdffeedback');
 
-    const data = await collection.find({ creatorID: creatorID }).toArray();;
+    const data = await collection.find({ creatorID: creatorID }).toArray();
 
-    if (data) {
+    if (data.length > 0) {
       res.json(data);
     } else {
       res.status(404).json({ error: 'Data not found for the specified creator ID' });
@@ -54,21 +54,7 @@ app.get("/pdffeedback/:creatorID", async (req, res) => {
 app.use("/screenshots", routerScreenshot);
 app.use("/", routerScreenshot);
 
-
-app.get("*",(req,res)=>{
-  res.sendFile(
-      path.join(__dirname,"../frontend/build/index.html"),
-      function(err){
-
-          if(err){
-              res.status(500).send(err)
-          }
-      }
-  )
-
-})
-
-const PORT = 8081;
+const PORT = process.env.PORT || 7000
 app.listen(PORT,async()=>{
  
     try {

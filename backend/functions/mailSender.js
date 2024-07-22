@@ -3,8 +3,17 @@ const { Pdf } = require('../model/pdf.model');
 const { UserModel } = require('../model/users.model');
 require('dotenv').config();
 
-async function sendEmail(creatorID) {
-  console.log("creator id :", creatorID);
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function sendEmail(creatorID,userEmail,websiteUrl) {
+  // console.log("Preparing to send email for creatorID:", creatorID,userEmail,websiteUrl);
+  
+  await delay(10000);
+  
+  // console.log("Delay complete, now sending email for creatorID:", creatorID);
+  
   try {
     let transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
@@ -16,13 +25,14 @@ async function sendEmail(creatorID) {
       }
     });
 
+    // console.log("Searching for PDF with creatorID:", creatorID);
     const pdf = await Pdf.findOne({ creatorID });
-    // const userData = await UserModel.findOne({ creatorID });
-    // console.log("userData",userData);
-    console.log("checking-pdf", pdf); // Log the retrieved document for debugging
+    // console.log("PDF document found:", pdf);
 
     if (!pdf) {
       console.error('PDF document not found for creatorID:', creatorID);
+      const allPdfs = await Pdf.find({});
+      // console.log("All PDFs in the database:", allPdfs);
       return;
     }
 
@@ -35,10 +45,10 @@ async function sendEmail(creatorID) {
 
     let mailOptions = {
       from: 'prashant@thealgohype.com',
-      to: pdf.email,
+      to: userEmail,
       // to: "prashantsom75@gmail.com",
-      subject: ' AI-Generated CRO Report for Your Website - Insights and Recommendations',
-      text: `Please find your AI-generated report for your website ${pdf.websiteName}.`,
+      subject: 'AI-Generated CRO Report for Your Website - Insights and Recommendations',
+      text: `Please find your AI-generated report for your website ${websiteUrl}.`,
       html: `
       <b>Please find your AI-generated report for your website.</b>
         <p>We hope this email finds you well. As requested, we have conducted a CRO (Conversion Rate Optimization) test on your website, and we have some valuable feedback to share with you. Please find the detailed report in the attachment.</p>
@@ -59,7 +69,10 @@ async function sendEmail(creatorID) {
     console.error('Error sending email:', error);
   }
 }
-// sendEmail("660eed6179e904992d906ea4")
+
 module.exports = {
   sendEmail
 };
+
+
+

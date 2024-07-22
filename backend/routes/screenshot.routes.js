@@ -6,76 +6,22 @@ const multer = require("multer");
 const parseUrl = require("url-parse");
 const { UserModel } = require("../model/users.model");
 const { screenShotFunc } = require("../screenShotFunc");
-const { LocalStorage } = require("node-localstorage");
-const { sendEmail } = require("../functions/mailSender");
 const { Pdf } = require("../model/pdf.model");
+const { sendEmail } = require("../functions/mailSender");
+const { processFeedback } = require("../functions/processfeedback");
 
-const pythonExecutable = "python3";
-const pythonScriptPath = "/home/ubuntu/cro-so/backend/main2.py";
-console.log("Python script path:", pythonScriptPath);
+// Determine the Python executable path based on the environment
+// const pythonExecutable = process.platform === 'win32' ? path.join(__dirname, "../myenv/Scripts/python.exe") : path.join(__dirname, "../myenv/bin/python");
+// const pythonScriptPath = path.join(__dirname, "../main2.py");
+
+// console.log("Python script path:", pythonScriptPath);
+
+
 
 const upload = multer({ storage: multer.memoryStorage() });
-let globalCreatorID;
-let globalWebsiteName;
-let globalUserEmail;
-
-
-// routerScreenshot.post("/", async (req, res) => {
-//   const { url: inputUrl, userEmail } = req.body;
-
-//   if (!inputUrl) {
-//     return res.status(400).json({ error: "URL is required in the request body." });
-//   }
-
-//   const parsedUrl = parseUrl(inputUrl);
-//   const websiteName = parsedUrl.hostname;
-//   globalWebsiteName = websiteName;
-//   globalUserEmail = userEmail;
-
-//   if (!websiteName) {
-//     return res.status(400).json({ error: "Invalid URL. Unable to extract the website name." });
-//   }
-
-//   try {
-//     const user = new UserModel({ websiteName, userEmail, inputUrl });
-//     await user.save();
-//     const userInDb = await UserModel.findOne({ userEmail, websiteName });
-//     const creatorID = userInDb._id.toString();
-//     globalCreatorID = creatorID
-
-//     console.log("Before screenShotFunc");
-//     const screenshotUrls = await screenShotFunc(inputUrl, websiteName, userEmail, creatorID);
-//     console.log("After screenShotFunc");
-
-//     console.log("Calling Python script...");
-//       runPythonScript(pythonScriptPath, creatorID) 
-//       .then(({ stdout, stderr }) => {
-//         console.log("Python script stdout:", stdout);
-//         console.log("Calling html file--------------->>>>>")
-//         if (stderr) {
-//         res.status(200).json({
-//           success: true,
-//           screenshots: screenshotUrls,
-//           creatorID: creatorID,
-//           redirectUrl: Boolean(stderr)  
-//         });
-//           console.log("html file called sucessfully--------------->>>>>")
-//           setTimeout(() => {
-//             sendEmail(creatorID)
-//           }, 10000);
-//         }
-//        })
-//        .catch((error) => {
-//          console.error(`An error occurred when running the Python script: ${error.message}`);
-//        });
-      
-//   } catch (error) {
-//     console.error(`An error occurred: ${error.message}`);
-//     res.status(500).json({ error: error.message });
-//   }
-// });
 
 routerScreenshot.post("/", async (req, res) => {
+  console.log("Running");
   const { url: inputUrl, userEmail } = req.body;
   if (!inputUrl) {
     return res.status(400).json({ error: "URL is required in the request body." });
@@ -94,20 +40,23 @@ routerScreenshot.post("/", async (req, res) => {
     const creatorID = userInDb._id.toString();
 
     const screenshotUrls = await screenShotFunc(inputUrl, websiteName, userEmail, creatorID);
-    const { stdout, stderr } = await runPythonScript(pythonScriptPath, creatorID);
-    console.log("Python script stdout:", stdout);
+    
+    // Process feedback using the new Node.js function
+    await processFeedback(creatorID);
+
+    const frontendUrl = `https://668e681dfdfd0f21c00bdb79--incomparable-monstera-5c55d8.netlify.app/?creatorID=${creatorID}`;
 
     res.status(200).json({
       success: true,
       screenshots: screenshotUrls,
       creatorID: creatorID,
-      redirectUrl: Boolean(stderr)
+      redirectUrl: frontendUrl,
+      websiteName: websiteName,
+      userEmail: userEmail,
     });
 
     console.log("Sending email after delay...");
-    setTimeout(() => {
-      sendEmail(creatorID);
-    }, 10000);
+    await sendEmail(creatorID, userEmail, inputUrl);
 
   } catch (error) {
     console.error(`An error occurred: ${error.message}`);
@@ -115,12 +64,120 @@ routerScreenshot.post("/", async (req, res) => {
   }
 });
 
+routerScreenshot.post("/send-email", async (req, res) => {
+  console.log("send-email endpoint called with body:", req.body);
+  const { creatorID, userEmail, websiteUrl } = req.body;
+  
+  if (!creatorID) {
+    return res.status(400).json({ error: "creatorID is required" });
+  }
+
+  try {
+    console.log("Calling sendEmail function with creatorID:", creatorID);
+    await sendEmail(creatorID, userEmail, websiteUrl);
+    res.status(200).json({ message: "Email sent successfully" });
+  } catch (error) {
+    console.error(`An error occurred while sending email: ${error.message}`);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+routerScreenshot.post('/upload-pdf', upload.single('pdf'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+
+  const newPdf = new Pdf({
+    name: req.file.originalname,
+    pdfData: req.file.buffer,
+    contentType: req.file.mimetype || 'application/pdf',
+    creatorID: req.body.creatorID,
+    websiteName: req.body.websiteName,
+    email: req.body.userEmail,
+  });
+
+  try {
+    await newPdf.save();
+    res.json({ message: 'PDF uploaded and saved to MongoDB.' });
+  } catch (error) {
+    console.error('Server error while uploading PDF', error.message);
+    res.status(500).send('Server error while uploading PDF');
+  }
+});
+
+
+// const upload = multer({ storage: multer.memoryStorage() });
+
+
+// routerScreenshot.post("/", async (req, res) => {
+//   console.log("Running");
+//   const { url: inputUrl, userEmail } = req.body;
+//   if (!inputUrl) {
+//     return res.status(400).json({ error: "URL is required in the request body." });
+//   }
+
+//   const parsedUrl = parseUrl(inputUrl);
+//   const websiteName = parsedUrl.hostname;
+//   if (!websiteName) {
+//     return res.status(400).json({ error: "Invalid URL. Unable to extract the website name." });
+//   }
+
+//   try {
+//     const user = new UserModel({ websiteName, userEmail, inputUrl });
+//     await user.save();
+//     const userInDb = await UserModel.findOne({ userEmail, websiteName });
+//     const creatorID = userInDb._id.toString();
+
+//     const screenshotUrls = await screenShotFunc(inputUrl, websiteName, userEmail, creatorID);
+//     // console.log("how many :-",screenshotUrls)
+//     const { stdout, stderr } = await runPythonScript(pythonScriptPath, creatorID);
+//     console.log("Python script stdout:", stdout);
+
+//     const frontendUrl = `https://668e681dfdfd0f21c00bdb79--incomparable-monstera-5c55d8.netlify.app/?creatorID=${creatorID}`;
+
+//     res.status(200).json({
+//       success: true,
+//       screenshots: screenshotUrls,
+//       creatorID: creatorID,
+//       redirectUrl: frontendUrl,
+//       websiteName : websiteName,
+//       userEmail:userEmail,
+//     });
+
+//     console.log("Sending email after delay...");
+
+
+//   } catch (error) {
+//     console.error(`An error occurred: ${error.message}`);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
+
+routerScreenshot.post("/send-email", async (req, res) => {
+  console.log("send-email endpoint called with body:", req.body);
+  const { creatorID,userEmail,websiteUrl } = req.body;
+  
+  if (!creatorID) {
+    return res.status(400).json({ error: "creatorID is required" });
+  }
+
+  try {
+    console.log("Calling sendEmail function with creatorID:", creatorID);
+    await sendEmail(creatorID,userEmail,websiteUrl);
+    res.status(200).json({ message: "Email sent successfully" });
+  } catch (error) {
+    console.error(`An error occurred while sending email: ${error.message}`);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 function runPythonScript(scriptPath, creatorID) {
-  console.log("Calling Python script with creatorID:",creatorID);
+  console.log("Calling Python script with creatorID:", creatorID);
   console.log("three--------------->>>>>");
   return new Promise((resolve, reject) => {
     const pythonProcess = spawn(pythonExecutable, [scriptPath, creatorID]);
-    // console.log("pythonProcess",pythonProcess);
+    console.log("dirname", __dirname);
     let stdout = "";
     let stderr = "";
 
@@ -153,48 +210,43 @@ function runPythonScript(scriptPath, creatorID) {
   });
 }
 
-      
+
+
 routerScreenshot.post('/upload-pdf', upload.single('pdf'), async (req, res) => {
   if (!req.file) {
-      return res.status(400).send('No file uploaded.');
+    return res.status(400).send('No file uploaded.');
   }
-console.log("globalWebsiteName",globalWebsiteName);
-console.log("globalUserEmail",globalUserEmail);
-  const newPdf = new Pdf({
-      name: req.file.originalname,
-      pdfData: req.file.buffer,
-      contentType: req.file.mimetype || 'application/pdf',
-      creatorID:globalCreatorID,
-      websiteName :globalWebsiteName,
-      email: globalUserEmail,
 
+  const newPdf = new Pdf({
+    name: req.file.originalname,
+    pdfData: req.file.buffer,
+    contentType: req.file.mimetype || 'application/pdf',
+    creatorID: req.body.creatorID,
+    websiteName: req.body.websiteName,
+    email: req.body.userEmail,
   });
 
   try {
-    
-      await newPdf.save(); 
-      res.json({ message: 'PDF uploaded and saved to MongoDB.' });
+    await newPdf.save();
+    res.json({ message: 'PDF uploaded and saved to MongoDB.' });
   } catch (error) {
-      console.error('Server error while uploading PDF', error.message);
-      res.status(500).send('Server error while uploading PDF');
+    console.error('Server error while uploading PDF', error.message);
+    res.status(500).send('Server error while uploading PDF');
   }
 });
+
 routerScreenshot.get("/feedback/:key", async (req, res) => {
   try {
     const key = req.params.key;
-    let websiteName = globalWebsiteName;
-
-    console.log("path", __dirname);
     const feedbackFilePath = path.join(__dirname, "..", "screenshots.json");
 
     console.log("feedbackFilePath", feedbackFilePath);
 
-    const jsonData = await fs.readFile(feedbackFilePath, "utf-8");
+    const jsonData = await fs.promises.readFile(feedbackFilePath, "utf-8");
     const feedbackData = JSON.parse(jsonData);
 
-    console.log("feedbackData", feedbackData[websiteName][0][key]);
-    if (feedbackData[websiteName]) {
-      res.status(200).json({ feedback: feedbackData[websiteName][0][key] });
+    if (feedbackData[key]) {
+      res.status(200).json({ feedback: feedbackData[key] });
     } else {
       res.status(404).json({ error: "Website not found in feedback data" });
     }
@@ -204,9 +256,4 @@ routerScreenshot.get("/feedback/:key", async (req, res) => {
   }
 });
 
-
-
-
-module.exports = {routerScreenshot};
-
-
+module.exports = { routerScreenshot };

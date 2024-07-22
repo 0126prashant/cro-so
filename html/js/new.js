@@ -1,10 +1,10 @@
-
 const urlParams = new URLSearchParams(window.location.search);
-console.log("urlParams",urlParams);
+console.log("urlParams", urlParams);
 const creatorID = urlParams.get('creatorID');
 
 console.log("Creator ID in new tab:", creatorID);
-fetch(`/pdffeedback/${creatorID}`)
+const apiUrl = process.env.APIURL;
+fetch(`${apiUrl}/pdffeedback/${creatorID}`)
   .then((response) => {
     if (response.ok) {
       return response.json();
@@ -20,43 +20,63 @@ fetch(`/pdffeedback/${creatorID}`)
     console.error("Error fetching data:", error);
   });
 
-
-
 function imageUrlToBase64(url, callback) {
   fetch(url, {
-    method: "GET",
-    mode: "cors",
+      method: 'GET',
+      mode: 'cors'
   })
-    .then((response) => {
+  .then(response => {
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+          throw new Error('Network response was not ok');
       }
       return response.blob();
-    })
-    .then((blob) => {
+  })
+  .then(blob => {
       const reader = new FileReader();
       reader.readAsDataURL(blob);
       reader.onloadend = () => {
-        const base64data = reader.result;
-        callback(base64data);
+          const base64data = reader.result;
+          callback(base64data);
       };
-    })
-    .catch((error) => {
-      console.error("Error fetching or encoding image:", error);
+  })
+  .catch(error => {
+      console.error('Error fetching or encoding image:', error);
       callback(null);
-    });
+  });
 }
 
 const main = document.getElementById("dynamic-part");
 
-
-function generatePdfWithJSPDF() {
+async function generatePdfWithJSPDF(shouldDownload = false) {
   const ele = document.getElementById("hello");
+
+  // Convert all images to base64
+  const imgElements = ele.getElementsByTagName('img');
+  for (let img of imgElements) {
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        imageUrlToBase64(img.src, (base64data) => {
+          console.log("base64data : --------------->>>", base64data);
+          if (base64data) {
+            resolve(base64data);
+          } else {
+            reject('Failed to fetch and encode image.');
+          }
+        });
+      });
+      img.src = base64;
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+    }
+  }
+
   const options = {
     margin: [10, 10, 10, 10],
-    filename: "pdf_file.pdf",
+    filename: "cro_report.pdf",
     image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2 },
     jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
   };
 
   html2pdf()
@@ -65,21 +85,31 @@ function generatePdfWithJSPDF() {
     .toPdf()
     .output("blob")
     .then(function (pdfBlob) {
-      const formData = new FormData();
-      formData.append("creatorID", creatorID);
-      formData.append("pdf", pdfBlob, "pdf_file.pdf");
+      if (shouldDownload) {
+        // If shouldDownload is true, trigger the download
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(pdfBlob);
+        link.download = "cro_report.pdf";
+        link.click();
+        URL.revokeObjectURL(link.href);
+      } else {
+        // Otherwise, upload to server as before
+        const formData = new FormData();
+        formData.append("creatorID", creatorID);
+        formData.append("pdf", pdfBlob, "cro_report.pdf");
 
-      fetch("/upload-pdf", {
-        method: "POST",
-        body: formData,
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("PDF uploaded successfully:", data);
+        fetch(`${apiUrl}/upload-pd`, {
+          method: "POST",
+          body: formData,
         })
-        .catch((error) => {
-          console.error("Error uploading PDF:", error);
-        });
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("PDF uploaded successfully:", data);
+          })
+          .catch((error) => {
+            console.error("Error uploading PDF:", error);
+          });
+      }
     });
 }
 
@@ -139,50 +169,59 @@ function Display(data) {
     const feedbackDiv = document.createElement("div");
     feedbackDiv.classList.add(isMobile ? "mobileFeedback" : "desktopFeedback");
     feedbackDiv.style.width = isMobile ? "50%" : "100%";
-    // feedbackDiv.style.border = "2px solid green";
     feedbackDiv.style.display = isMobile ? "inline-block" : "block";
 
     let feedbackContent = "";
-      for (let i = 1; i <= Object.keys(item.cro_feedback).length / 2; i++) {
-        if (item.cro_feedback[`advice_heading_${i}`] && item.cro_feedback[`advice_${i}`]) {
-          feedbackContent += `
-            <div class="feedbackItem">
-              <span class="feedbackNumber">${i}</span>
-              <div class="feedbackContent">
-                <div class="feedbackHeading">${item.cro_feedback[`advice_heading_${i}`]}</div>
-                <div>${item.cro_feedback[`advice_${i}`]}</div>
-              </div>
+    for (let i = 1; i <= Object.keys(item.cro_feedback).length / 2; i++) {
+      if (item.cro_feedback[`advice_heading_${i}`] && item.cro_feedback[`advice_${i}`]) {
+        feedbackContent += `
+          <div class="feedbackItem">
+            <span class="feedbackNumber">${i}</span>
+            <div class="feedbackContent">
+              <div class="feedbackHeading">${item.cro_feedback[`advice_heading_${i}`]}</div>
+              <div>${item.cro_feedback[`advice_${i}`]}</div>
             </div>
-          `;
-        }
+          </div>
+        `;
       }
-      if (item.cro_feedback.super_cro_tip_advice) {
-        feedbackContent += `<div class="superCROTip">Super CRO Tip: ${item.cro_feedback.super_cro_tip_advice}</div>`;
-      }
+    }
+    if (item.cro_feedback.super_cro_tip_advice) {
+      feedbackContent += `<div class="superCROTip">Super CRO Tip: ${item.cro_feedback.super_cro_tip_advice}</div>`;
+    }
 
     feedbackDiv.innerHTML = feedbackContent;
     parentElement.appendChild(feedbackDiv);
   };
+
   function createItemDisplay(item, isMobile, alignLeft = false) {
+    console.log(item)
     const itemParentDiv = document.createElement("div");
     itemParentDiv.classList.add(isMobile ? "mobileParentDiv" : "desktopParentDiv");
     itemParentDiv.style.display = "flex";
     itemParentDiv.style.flexDirection = isMobile ? (alignLeft ? "row-reverse" : "row") : "column";
     itemParentDiv.style.justifyContent = isMobile && alignLeft ? "flex-end" : "flex-start";
-    // itemParentDiv.style.border = "2px solid";
     itemParentDiv.style.width = "100%";
 
     const itemImage = document.createElement("img");
     itemImage.style.width = isMobile ? "40%" : "100%";
     itemImage.style.height = isMobile ? "400px" : "300px";
     itemImage.style.border = "2px solid";
-    itemImage.src = item.image_url;
+
+    imageUrlToBase64(item.image_url, (base64data) => {
+      if (base64data) {
+        itemImage.src = base64data;
+      } else {
+        console.error('Failed to fetch and encode image.');
+      }
+    });
+
     itemParentDiv.appendChild(itemImage);
 
     appendCROFeedback(itemParentDiv, item, isMobile);
 
     return itemParentDiv;
   }
+
   const desktopData = data.filter(item => item.device === "desktop");
   const mobileData = data.filter(item => item.device === "mobile");
   const itemPromises = desktopData.map((desktopItem, index) => {
@@ -202,6 +241,7 @@ function Display(data) {
       resolve()
     });
   });
+
   if (mobileData.length > desktopData.length) {
     let alignLeft = false;
     for (let i = desktopData.length; i < mobileData.length; i++) {
@@ -215,14 +255,15 @@ function Display(data) {
         parentDiv.appendChild(generateFooter());
         main.appendChild(parentDiv);
 
-        resolve(); 
+        resolve();
       }));
     }
   }
+
   Promise.all(itemPromises)
     .then(() => {
       setTimeout(() => {
-        generatePdfWithJSPDF();
+        generatePdfWithJSPDF(false);  
       }, 2000);
     })
     .catch((error) => {
@@ -230,9 +271,9 @@ function Display(data) {
     });
 }
 
-
-
-
+async function downloadPdf() {
+  await generatePdfWithJSPDF(true);  
+}
 
 document.addEventListener("DOMContentLoaded", function () {
   var downloadBtn = document.getElementById("download-btn");
@@ -240,18 +281,12 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!downloadBtn.dataset.listenerAdded) {
     downloadBtn.addEventListener("click", function (event) {
       console.log("Download button clicked");
-      generatePdfWithJSPDF();
+      downloadPdf();
     });
 
     downloadBtn.dataset.listenerAdded = "true";
   }
 });
-
-
-
-
-
-
 
 
 
