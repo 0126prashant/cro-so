@@ -1,7 +1,7 @@
+
 const puppeteer = require('puppeteer');
-const { S3 } = require('aws-sdk');
-const { v4: uuidv4 } = require('uuid');
 const AWS = require('aws-sdk');
+const { v4: uuidv4 } = require('uuid');
 const { WebsiteInfo } = require('./model/screenshot.model');
 
 const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
@@ -39,22 +39,23 @@ async function checkFolderExists(folderName) {
     return response.CommonPrefixes.length > 0 || response.Contents.length > 0;
 }
 
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function screenShotFunc(inputUrl, websiteName, userEmail, creatorID) {
     console.log("crtrID", creatorID);
     console.log("Starting screenshot function for:", websiteName);
     console.time('Execution Time');
 
-    const browser = await puppeteer.launch({
+        const browser = await puppeteer.launch({
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        executablePath: '/usr/bin/chromium' // Specify the correct path to Chromium
+        executablePath: '/usr/bin/chromium' 
     });
-    // const browser = await puppeteer.launch({
-    //     headless: true,
-    //     args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    //     executablePath: process.env.NODE_ENV === 'production' ? '/usr/bin/chromium-browser' : puppeteer.executablePath(),
-    // });
     const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
     const uniqueFolderName = await getUniqueFolderName(websiteName.replace(/^https?:\/\/|^www\./, '').replace(/[^a-zA-Z0-9]/g, '_'));
 
     let websiteInfo = await WebsiteInfo.findOne({ creatorID: creatorID });
@@ -68,37 +69,7 @@ async function screenShotFunc(inputUrl, websiteName, userEmail, creatorID) {
         });
     }
 
-    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-    // Function to capture and upload initial screenshot with popups
-    async function captureInitialScreenshot(viewport, type) {
-        await page.setViewport(viewport);
-        await page.goto(inputUrl, { waitUntil: 'networkidle0' });
-        await page.evaluate(wait, 5000);  // Wait for 5 seconds to ensure popups appear
-
-        const screenshotImageData = await page.screenshot({ encoding: 'base64', type: 'jpeg' });
-        const fileName = `${Date.now()}_${type}_initial.jpg`;
-        const s3Path = `${uniqueFolderName}/initial-screenshots/${fileName}`;
-
-        const s3Params = {
-            Bucket: S3_BUCKET_NAME,
-            Key: s3Path,
-            Body: Buffer.from(screenshotImageData, 'base64'),
-            ContentType: 'image/jpeg',
-        };
-
-        const uploadResult = await s3.upload(s3Params).promise();
-        websiteInfo[type].push({
-            url: uploadResult.Location,
-            key: `initial_${type}_img_url`
-        });
-    }
-
-    // Capture initial screenshots with popups
-    await captureInitialScreenshot(desktopViewport, 'desktop');
-    await captureInitialScreenshot(mobileViewport, 'mobile');
-
-    // Enable script blocking
+    // Block all scripts
     await page.setRequestInterception(true);
     page.on('request', (request) => {
         if (request.resourceType() === 'script') {
@@ -110,71 +81,85 @@ async function screenShotFunc(inputUrl, websiteName, userEmail, creatorID) {
     });
 
     try {
-        const viewports = [desktopViewport, mobileViewport];
+        await page.goto(inputUrl, { waitUntil: 'networkidle0', timeout: 60000 });
+    } catch (error) {
+        console.error(`Error loading page: ${error.message}`);
+        // Continue with the script even if page load fails
+    }
+    
+    await wait(5000);
 
-        for (const viewport of viewports) {
-            await page.setViewport(viewport);
-            await page.goto(inputUrl, { waitUntil: 'networkidle0' });
-            await page.evaluate(wait, 2000);
-        
-            const type = viewport === mobileViewport ? 'mobile' : 'desktop';
-            const dimensions = await page.evaluate(() => ({
+    const viewports = [desktopViewport, mobileViewport];
+
+    for (const viewport of viewports) {
+        await page.setViewport(viewport);
+        await wait(2000);
+
+        const dimensions = await page.evaluate(() => {
+            return {
                 width: document.documentElement.scrollWidth,
-                height: document.documentElement.scrollHeight
-            }));
-        
-            for (let y = 0; y < dimensions.height; y += viewport.height) {
-                let newHeight = Math.min(viewport.height, dimensions.height - y);
-                await page.setViewport({
+                height: document.documentElement.scrollHeight,
+                deviceScaleFactor: window.devicePixelRatio,
+            };
+        });
+
+        console.log(`Total height: ${dimensions.height}px`);
+
+        const type = viewport === mobileViewport ? 'mobile' : 'desktop';
+
+        let yPosition = 0;
+        while (yPosition < dimensions.height) {
+            await page.evaluate((y) => window.scrollTo(0, y), yPosition);
+            await wait(1000);
+
+            const screenshotImageData = await page.screenshot({
+                encoding: 'base64',
+                type: 'jpeg',
+                fullPage: false,
+                clip: {
+                    x: 0,
+                    y: yPosition,
                     width: viewport.width,
-                    height: newHeight
-                });
-        
-                for (let x = 0; x < dimensions.width; x += viewport.width) {
-                    await page.evaluate((x, y) => window.scrollTo(x, y), x, y);
-                    await page.evaluate(wait, 2000);
-        
-                    const screenshotImageData = await page.screenshot({ encoding: 'base64', type: 'jpeg' });
-                    const fileName = `${Date.now()}_${type}_${x}_${y}.jpg`;
-                    const s3Path = `${uniqueFolderName}/${type}-images/${fileName}`;
-        
-                    const s3Params = {
-                        Bucket: S3_BUCKET_NAME,
-                        Key: s3Path,
-                        Body: Buffer.from(screenshotImageData, 'base64'),
-                        ContentType: 'image/jpeg',
-                    };
-        
-                    const uploadResult = await s3.upload(s3Params).promise();
-                    websiteInfo[type].push({
-                        url: uploadResult.Location,
-                        key: `${type}_img_${x}_${y}_url`
-                    });
+                    height: Math.min(viewport.height, dimensions.height - yPosition)
                 }
-        
-                if (newHeight !== viewport.height) {
-                    await page.setViewport(viewport);
-                }
+            });
+
+            const fileName = `${Date.now()}_${type}_${yPosition}.jpg`;
+            const s3Path = `${uniqueFolderName}/${type}-images/${fileName}`;
+
+            const s3Params = {
+                Bucket: S3_BUCKET_NAME,
+                Key: s3Path,
+                Body: Buffer.from(screenshotImageData, 'base64'),
+                ContentType: 'image/jpeg',
+            };
+
+            const uploadResult = await s3.upload(s3Params).promise();
+            websiteInfo[type].push({
+                url: uploadResult.Location,
+                key: `${type}_img_${yPosition}_url`
+            });
+
+            yPosition += viewport.height;
+            if (yPosition > dimensions.height) {
+                yPosition = dimensions.height;
             }
         }
-       
-        await websiteInfo.save();
-        console.log("Data saved to MongoDB.");
-
-    } catch (error) {
-        console.error(`Error in screenShotFunc: ${error.message}`);
-    } finally {
-        console.timeEnd('Execution Time');
-        await browser.close();
-        const screenshotUrls = {
-            desktop: websiteInfo.desktop.map(img => img.url),
-            mobile: websiteInfo.mobile.map(img => img.url)
-        };
-        console.log("Screenshot URLs:", screenshotUrls);
-        return screenshotUrls;
     }
+
+    await websiteInfo.save();
+    console.log("Data saved to MongoDB.");
+
+    console.timeEnd('Execution Time');
+    await browser.close();
+
+    const screenshotUrls = {
+        desktop: websiteInfo.desktop.map(img => img.url),
+        mobile: websiteInfo.mobile.map(img => img.url)
+    };
+    console.log("Screenshot URLs:", screenshotUrls);
+    return screenshotUrls;
 }
 
 module.exports = { screenShotFunc };
-
 
